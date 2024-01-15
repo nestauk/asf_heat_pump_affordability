@@ -1,0 +1,5 @@
+# Change these at your peril:
+export PROJECT_NAME=asf_heat_pump_affordability
+export REPO_NAME=asf_heat_pump_affordability
+export DESCRIPTION=Estimate heat pump costs across different housing archetypes
+export PROJECT_OPENNESS=public
