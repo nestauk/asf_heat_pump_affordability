@@ -57,8 +57,11 @@ def main(mcs_epc_join_date, cost_year_min=None, cost_year_max=None):
     )
 
     # Save analytical sample
+    year_range = "".join(
+        [str(sample["commission_year"].min()), str(sample["commission_year"].max())]
+    )
     sample.to_csv(
-        f"s3://asf-heat-pump-affordability/mcs_installations_epc_most_relevant_{mcs_epc_join_date}_preprocessed.csv"
+        f"s3://asf-heat-pump-affordability/mcs_installations_epc_most_relevant_{mcs_epc_join_date}_preprocessed_yearRange_{year_range}.csv"
     )
 
     return sample
