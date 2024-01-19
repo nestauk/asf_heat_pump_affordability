@@ -114,6 +114,10 @@ df = filter_by_year.copy()
 # - Insufficient property data to assign property archetype
 
 # %%
+## Replace 'unknown' string values with NaN for review
+df = df.replace("(?i)unknown", np.nan, regex=True)
+
+# %%
 ## Add cols to indicate rows where key variables are NaN
 ## original_epc_index col indicates whether MCS record has a joined EPC record
 
@@ -130,11 +134,13 @@ property_archetype_cols = ["CONSTRUCTION_AGE_BAND", "BUILT_FORM", "PROPERTY_TYPE
 df["property_archetype_data_na"] = df[property_archetype_cols].isna().any(axis=1)
 
 ## Add col to indicate rows with non-ASHPs
+
 # df["not_ashp"] = df["tech_type"].apply(
 #    lambda x: False if x == "Air Source Heat Pump" else True
 # )
 
 # This is much simpler than the above:
+
 df["not_ashp"] = df["tech_type"] != "Air Source Heat Pump"
 
 # %%
