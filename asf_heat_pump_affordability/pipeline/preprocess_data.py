@@ -59,8 +59,8 @@ def generate_df_adjusted_costs(mcs_epc_df, cpi_quarters_df):
         cpi_quarters_df, how="left", left_on="year_quarter", right_on="Title"
     )
 
-    mcs_epc_inf["adjusted_cost"] = _compute_series_adjusted_costs(
-        mcs_epc_inf["cost"], mcs_epc_inf["adjustment_factor"]
+    mcs_epc_inf["adjusted_cost"] = (
+        mcs_epc_inf["cost"] * mcs_epc_inf["adjustment_factor"]
     )
 
     return mcs_epc_inf
@@ -81,17 +81,3 @@ def _generate_series_year_quarters(commission_date_series):
         + " Q"
         + commission_date_series.pipe(pd.to_datetime).dt.quarter.astype(str)
     )
-
-
-def _compute_series_adjusted_costs(cost_series, adjustment_factor_series):
-    """
-    Compute a series of adjusted costs using inflation adjustment factors.
-
-    Args
-        cost_series (pd.Series): series of cost values (float)
-        adjustment_factor_series (pd.Series): series of inflation adjustment factors (float)
-
-    Returns
-        pd.Series: series of adjusted costs
-    """
-    return cost_series * adjustment_factor_series
