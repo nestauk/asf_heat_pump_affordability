@@ -1,5 +1,7 @@
 import pandas as pd
 from argparse import ArgumentParser
+
+from asf_heat_pump_affordability import json_schema
 from asf_heat_pump_affordability.pipeline import preprocess_data
 
 
@@ -50,7 +52,9 @@ def main(
     """
     # Import data
     mcs_epc_data = pd.read_csv(
-        f"s3://asf-core-data/outputs/MCS/mcs_installations_epc_most_relevant_{mcs_epc_join_date}.csv"
+        f"s3://asf-core-data/outputs/MCS/mcs_installations_epc_most_relevant_{mcs_epc_join_date}.csv",
+        dtype=json_schema["mcs_epc_data"],
+        parse_dates=["commission_date", "INSPECTION_DATE"],
     )
 
     # Preprocess - apply exclusion criteria
