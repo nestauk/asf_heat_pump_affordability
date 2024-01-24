@@ -11,7 +11,7 @@ def run():
     parser.add_argument(
         "--mcs_epc_join_date",
         help="Specify which batch of most_relevant joined MCS-EPC dataset to use, by date in the format YYMMDD.",
-        type=str,
+        type=int,
     )
 
     parser.add_argument(
@@ -32,12 +32,14 @@ def run():
     main(**vars(args))
 
 
-def main(mcs_epc_join_date, cost_year_min=None, cost_year_max=None):
+def main(
+    mcs_epc_join_date: int, cost_year_min: int = None, cost_year_max: int = None
+) -> pd.DataFrame:
     """
     IN DEV: currently imports MCS-EPC joined dataset, applies exclusion criteria to it and saves the output to S3.
 
     Args:
-        mcs_epc_join_date (str): which batch of most_relevant joined MCS-EPC dataset to use, by date in the format YYMMDD.
+        mcs_epc_join_date (int): which batch of most_relevant joined MCS-EPC dataset to use, by date in the format YYMMDD.
         cost_year_min (int): min year of heat pump installation cost data to include in analysis
         cost_year_max (int): max year of heat pump installation cost data to include in analysis
 
