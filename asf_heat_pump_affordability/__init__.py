@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 import yaml
+import json
 
 
 def get_yaml_config(file_path: Path) -> Optional[dict]:
@@ -12,6 +13,13 @@ def get_yaml_config(file_path: Path) -> Optional[dict]:
     if file_path.exists():
         with open(file_path, "rt") as f:
             return yaml.load(f.read(), Loader=yaml.FullLoader)
+
+
+def get_json_schema(file_path: Path) -> Optional[dict]:
+    """Fetch json schema and return as dict if it exists."""
+    if file_path.exists():
+        with open(file_path, "r") as f:
+            return json.load(f)
 
 
 # Define project base directory
@@ -33,3 +41,7 @@ logger = logging.getLogger(__name__)
 # base/global config
 _base_config_path = Path(__file__).parent.resolve() / "config/base.yaml"
 config = get_yaml_config(_base_config_path)
+
+# json schema
+_json_schema_path = Path(__file__).parent.resolve() / "config/schema.json"
+json_schema = get_json_schema(_json_schema_path)
