@@ -1,6 +1,6 @@
 import pandas as pd
 from argparse import ArgumentParser
-from asf_heat_pump_affordability import config
+from asf_heat_pump_affordability import config, json_schema
 from asf_heat_pump_affordability.pipeline import preprocess_data, preprocess_cpi
 from asf_heat_pump_affordability.getters import get_data
 
@@ -13,7 +13,7 @@ def run():
     parser.add_argument(
         "--mcs_epc_join_date",
         help="Specify which batch of most_relevant joined MCS-EPC dataset to use, by date in the format YYMMDD.",
-        type=str,
+        type=int,
     )
 
     parser.add_argument(
@@ -40,12 +40,17 @@ def run():
     main(**vars(args))
 
 
-def main(mcs_epc_join_date, cpi_data_year, cost_year_min=None, cost_year_max=None):
+def main(
+    mcs_epc_join_date: int,
+    cpi_data_year: int,
+    cost_year_min: int = None,
+    cost_year_max: int = None,
+) -> pd.DataFrame:
     """
     IN DEV: currently imports MCS-EPC joined dataset, applies exclusion criteria to it and saves the output to S3.
 
     Args:
-        mcs_epc_join_date (str): which batch of most_relevant joined MCS-EPC dataset to use, by date in the format YYMMDD.
+        mcs_epc_join_date (int): which batch of most_relevant joined MCS-EPC dataset to use, by date in the format YYMMDD.
         cpi_data_year (int): reference year to adjust heat pump installation costs to
         cost_year_min (int): min year of heat pump installation cost data to include in analysis
         cost_year_max (int): max year of heat pump installation cost data to include in analysis
@@ -57,7 +62,9 @@ def main(mcs_epc_join_date, cpi_data_year, cost_year_min=None, cost_year_max=Non
     """
     # Import MCS-EPC data
     mcs_epc_data = pd.read_csv(
-        f"s3://asf-core-data/outputs/MCS/mcs_installations_epc_most_relevant_{mcs_epc_join_date}.csv"
+        f"s3://asf-core-data/outputs/MCS/mcs_installations_epc_most_relevant_{mcs_epc_join_date}.csv",
+        dtype=json_schema["mcs_epc_data"],
+        parse_dates=["commission_date", "INSPECTION_DATE"],
     )
 
     # Preprocess MCS-EPC data - apply exclusion criteria
