@@ -1,7 +1,11 @@
+import pandas as pd
+
 from asf_heat_pump_affordability import config
 
 
-def get_df_quarterly_cpi_with_adjustment_factors(ref_year, cpi_df, cpi_col_header):
+def get_df_quarterly_cpi_with_adjustment_factors(
+    ref_year: int, cpi_df: pd.DataFrame, cpi_col_header: str
+) -> pd.DataFrame:
     """
     Get dataframe of CPI (consumer price index) data with adjustment factors calculated for a given reference year.
 
@@ -22,7 +26,7 @@ def get_df_quarterly_cpi_with_adjustment_factors(ref_year, cpi_df, cpi_col_heade
     return cpi_quarterly_df
 
 
-def _get_int_ref_cpi_value(ref_year, cpi_df):
+def _get_int_ref_cpi_value(ref_year: int, cpi_df: pd.DataFrame) -> int:
     """
     Get whole year CPI (consumer price index) value for a given reference year.
 
@@ -41,7 +45,7 @@ def _get_int_ref_cpi_value(ref_year, cpi_df):
     return ref_cpi
 
 
-def _get_df_quarterly_cpi_data(cpi_df):
+def _get_df_quarterly_cpi_data(cpi_df: pd.DataFrame) -> pd.DataFrame:
     """
     Get dataframe of quarterly CPI (consumer price index) values.
 
@@ -54,7 +58,9 @@ def _get_df_quarterly_cpi_data(cpi_df):
     return cpi_df.loc[lambda df: df["Title"].str.contains("Q")].reset_index(drop=True)
 
 
-def _compute_series_cpi_adjustment_factors(ref_cpi, cpi_series):
+def _compute_series_cpi_adjustment_factors(
+    ref_cpi: int, cpi_series: pd.Series
+) -> pd.Series:
     """
     Compute series of adjustment factors for a series of CPI (consumer price index) values against a CPI reference value.
 

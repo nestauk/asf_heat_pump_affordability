@@ -44,7 +44,9 @@ def apply_exclusion_criteria(
     return df
 
 
-def generate_df_adjusted_costs(mcs_epc_df, cpi_quarters_df):
+def generate_df_adjusted_costs(
+    mcs_epc_df: pd.DataFrame, cpi_quarters_df: pd.DataFrame
+) -> pd.DataFrame:
     """
     Join CPI (consumer price index) dataframe containing quarterly adjustment factors to MCS-EPC dataframe and
     calculate adjusted installation costs for each row.
@@ -71,7 +73,7 @@ def generate_df_adjusted_costs(mcs_epc_df, cpi_quarters_df):
     return mcs_epc_inf
 
 
-def _generate_series_year_quarters(commission_date_series):
+def _generate_series_year_quarters(commission_date_series: pd.Series) -> pd.Series:
     """
     Generate a series of years and quarters from a series of dates.
 

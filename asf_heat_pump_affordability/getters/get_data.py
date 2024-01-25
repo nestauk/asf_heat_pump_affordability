@@ -3,7 +3,7 @@ import pandas as pd
 from io import BytesIO
 
 
-def get_df_from_url(url):
+def get_df_from_url(url: str) -> pd.DataFrame:
     """
     Get dataframe from .csv file stored at URL.
 
