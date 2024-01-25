@@ -1,5 +1,6 @@
 import pandas as pd
 from argparse import ArgumentParser
+from typing import Optional
 from asf_heat_pump_affordability import config, json_schema
 from asf_heat_pump_affordability.pipeline import preprocess_data, preprocess_cpi
 from asf_heat_pump_affordability.getters import get_data
@@ -43,8 +44,8 @@ def run():
 def main(
     mcs_epc_join_date: int,
     cpi_data_year: int,
-    cost_year_min: int = None,
-    cost_year_max: int = None,
+    cost_year_min: Optional[int] = None,
+    cost_year_max: Optional[int] = None,
 ) -> pd.DataFrame:
     """
     IN DEV: currently imports MCS-EPC joined dataset, applies exclusion criteria to it and saves the output to S3.

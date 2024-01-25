@@ -1,9 +1,12 @@
 import numpy as np
 import pandas as pd
+from typing import Optional
 
 
 def apply_exclusion_criteria(
-    df: pd.DataFrame, cost_year_min: int = None, cost_year_max: int = None
+    df: pd.DataFrame,
+    cost_year_min: Optional[int] = None,
+    cost_year_max: Optional[int] = None,
 ) -> pd.DataFrame:
     """
     Apply exclusion criteria to joined MCS-EPC dataframe to get analytical sample.
