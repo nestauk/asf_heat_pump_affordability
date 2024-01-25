@@ -1,0 +1,4 @@
+data_source:
+  cpi_source_url: "https://www.ons.gov.uk/generator?format=csv&uri=/economy/inflationandpriceindices/timeseries/d7ck/mm23"
+cpi_data:
+  cpi_column_header: "CPI INDEX 05.3 : Household appliances, fitting and repairs 2015=100"

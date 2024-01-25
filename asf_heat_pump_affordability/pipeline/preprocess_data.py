@@ -1,9 +1,12 @@
 import numpy as np
 import pandas as pd
+from typing import Optional
 
 
 def apply_exclusion_criteria(
-    df: pd.DataFrame, cost_year_min: int = None, cost_year_max: int = None
+    df: pd.DataFrame,
+    cost_year_min: Optional[int] = None,
+    cost_year_max: Optional[int] = None,
 ) -> pd.DataFrame:
     """
     Apply exclusion criteria to joined MCS-EPC dataframe to get analytical sample.
@@ -42,3 +45,49 @@ def apply_exclusion_criteria(
     df = df[df["tech_type"] == "Air Source Heat Pump"]
 
     return df
+
+
+def generate_df_adjusted_costs(
+    mcs_epc_df: pd.DataFrame, cpi_quarters_df: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Join CPI (consumer price index) dataframe containing quarterly adjustment factors to MCS-EPC dataframe and
+    calculate adjusted installation costs for each row.
+
+    Args
+        mcs_epc_df (pd.DataFrame): joined MCS-EPC dataframe
+        cpi_quarters_df (pd.DataFrame): quarterly CPI data with adjustment factors for each quarter
+
+    Returns
+        pd.DataFrame: MCS-EPC dataframe with CPI values, adjustment factors, and adjusted costs
+    """
+    mcs_epc_df["year_quarter"] = _generate_series_year_quarters(
+        commission_date_series=mcs_epc_df["commission_date"]
+    )
+
+    mcs_epc_inf = mcs_epc_df.merge(
+        cpi_quarters_df, how="left", left_on="year_quarter", right_on="Title"
+    )
+
+    mcs_epc_inf["adjusted_cost"] = (
+        mcs_epc_inf["cost"] * mcs_epc_inf["adjustment_factor"]
+    )
+
+    return mcs_epc_inf
+
+
+def _generate_series_year_quarters(commission_date_series: pd.Series) -> pd.Series:
+    """
+    Generate a series of years and quarters from a series of dates.
+
+    Args
+        commission_date_series (pd.Series): commission dates with year, month, and day
+
+    Returns
+        pd.Series: series of year and quarter values in the form `YYYY QN`
+    """
+    return (
+        commission_date_series.pipe(pd.to_datetime).dt.year.astype(str)
+        + " Q"
+        + commission_date_series.pipe(pd.to_datetime).dt.quarter.astype(str)
+    )
