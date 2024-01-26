@@ -46,8 +46,8 @@ def run():
     )
 
     parser.add_argument(
-        "--cost_percentiles",
-        help="Percentile(s) at which to extract cost values for each property archetype (range 0 to 1).",
+        "--cost_quantiles",
+        help="Quantile(s) at which to extract cost values for each property archetype (range 0 to 1).",
         nargs="+",
         type=float,
         default=None,
@@ -69,7 +69,7 @@ def main(
     cpi_data_year: int,
     cost_year_min: Optional[int] = None,
     cost_year_max: Optional[int] = None,
-    cost_percentiles: Optional[list or np.array] = None,
+    cost_quantiles: Optional[list or np.array] = None,
     save_to_s3: bool = True,
 ) -> pd.DataFrame:
     """
@@ -80,8 +80,8 @@ def main(
         cpi_data_year (int): reference year to adjust heat pump installation costs to
         cost_year_min (int): min year of heat pump installation cost data to include in analysis
         cost_year_max (int): max year of heat pump installation cost data to include in analysis
-        cost_percentiles (list or np.array): percentile(s) to get cost by archetype for
-        save_to_s3 (bool): save analytical sample and output dataset to asf-heat-pump-affordability bucket on S3. Defaults to True.
+        cost_quantiles (list or np.array): quantile(s) at which to extract cost values for each property archetype (range 0 to 1)
+        save_to_s3 (bool): save analytical sample and output dataset to `asf-heat-pump-affordability` bucket on S3. Default True.
 
     Returns
         pd.DataFrame: cost percentiles for each property archetype adjusted for inflation
@@ -114,20 +114,20 @@ def main(
     # Get archetypes
     archetypes_dict = archetypes.classify_dict_archetypes_masks(mcs_epc_inf)
 
-    # Get cost percentiles
-    if not cost_percentiles:
-        cost_percentiles = np.arange(0, 1.1, 0.1)
+    # Get cost quantiles
+    if not cost_quantiles:
+        cost_quantiles = np.arange(0, 1.1, 0.1)
     archetypes_costs_dict = (
-        generate_cost_percentiles.generate_dict_cost_percentiles_by_archetype(
+        generate_cost_percentiles.generate_dict_cost_quantiles_by_archetype(
             cost_series=mcs_epc_inf["adjusted_cost"],
             archetypes_masks=archetypes_dict,
-            percentiles=cost_percentiles,
+            quantiles=cost_quantiles,
         )
     )
     archetypes_costs_df = (
         generate_cost_percentiles.generate_df_cost_percentiles_by_archetype_formatted(
             archetype_costs_dict=archetypes_costs_dict,
-            percentiles=cost_percentiles,
+            quantiles=cost_quantiles,
             ref_year=cpi_data_year,
         )
     )

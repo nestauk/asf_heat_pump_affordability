@@ -2,47 +2,47 @@ import pandas as pd
 import numpy as np
 
 
-def generate_dict_cost_percentiles_by_archetype(
+def generate_dict_cost_quantiles_by_archetype(
     cost_series: pd.Series,
     archetypes_masks: dict,
-    percentiles: list or np.array,
+    quantiles: list or np.array,
 ) -> dict:
     """
-    Generate dict with archetype name and values for cost at each given percentile for every archetype in `archetype_masks`.
+    Generate dict where property archetype names from `archetype_masks` are keys and arrays of cost values at given quantile(s) are values.
 
     Args
         cost_series (pd.Series): series of (adjusted) cost values
         archetype_masks (dict): dictionary of archetype labels with corresponding pandas Series of boolean values
-        percentiles (list or np.array): percentile(s) at which to extract cost values (range 0 to 1)
+        quantiles (list or np.array): quantile(s) at which to extract cost values (range 0 to 1)
 
     Returns
-        dict: where archetype names are keys and array of cost values at given percentile(s) are values
+        dict: {(str) archetype_name: (np.array) cost values at given quantile(s)}
     """
     archetype_costs_dict = {}
     for archetype_name, archetype_mask in archetypes_masks.items():
         archetype_costs_dict[archetype_name] = (
-            cost_series[archetype_mask].quantile(percentiles).values
+            cost_series[archetype_mask].quantile(quantiles).values
         )
 
     return archetype_costs_dict
 
 
 def generate_df_cost_percentiles_by_archetype_formatted(
-    archetype_costs_dict: dict, percentiles: list or np.array, ref_year: int
+    archetype_costs_dict: dict, quantiles: list or np.array, ref_year: int
 ) -> pd.DataFrame:
     """
     Convert dict of archetype costs to dataframe.
 
     Args
-        archetype_costs_dict (dict): where archetype names are keys and array of cost values at given percentile(s) are values
-        percentiles (list or np.array): percentile(s) at which cost values have been extracted (range 0 to 1)
+        archetype_costs_dict (dict): where archetype names are keys and array of cost values at given quantile(s) are values
+        quantiles (list or np.array): quantile(s) at which cost values have been extracted (range 0 to 1)
         ref_year (int): reference year for adjusted costs
 
     Returns:
         pd.DataFrame: cost percentiles by property archetype
 
     """
-    _cols = _generate_list_column_names(percentiles=percentiles, ref_year=ref_year)
+    _cols = _generate_list_column_names(quantiles=quantiles, ref_year=ref_year)
     _cols.insert(0, "property_archetype")
 
     df = pd.DataFrame(archetype_costs_dict).T.reset_index()
@@ -60,12 +60,12 @@ def _round_cost(v):
     return int(round(v, -1))
 
 
-def _generate_list_column_names(percentiles, ref_year):
+def _generate_list_column_names(quantiles, ref_year):
     """
-    Create list of string column names from percentiles
+    Create list of string column names from quantiles
 
     Args
-        percentiles (list or np.array): percentile(s) at which cost values have been extracted (range 0 to 1)
+        quantiles (list or np.array): quantile(s) at which cost values have been extracted (range 0 to 1)
         cpi_data_year (int): reference year for adjusted costs
 
     Returns
@@ -80,11 +80,11 @@ def _generate_list_column_names(percentiles, ref_year):
         1: "max",
     }
 
-    for pc in percentiles:
-        if pc in [0, 0.25, 0.5, 0.75, 1]:
-            columns.append(mapping[pc])
+    for q in quantiles:
+        if q in [0, 0.25, 0.5, 0.75, 1]:
+            columns.append(mapping[q])
         else:
-            columns.append(f"{int(pc * 100)}th_percentile")
+            columns.append(f"{int(q * 100)}th_percentile")
 
     columns = ["_".join([col, "adjusted_cost", str(ref_year)]) for col in columns]
 
