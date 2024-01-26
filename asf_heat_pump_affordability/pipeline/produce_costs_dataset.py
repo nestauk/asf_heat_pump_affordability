@@ -56,8 +56,7 @@ def run():
     parser.add_argument(
         "--save_to_s3",
         help="Save sample and output datasets to `asf-heat-pump-affordability` S3 bucket.",
-        type=bool,
-        default=True,
+        action="store_true",
     )
 
     args = parser.parse_args()
@@ -73,7 +72,9 @@ def main(
     save_to_s3: bool = True,
 ) -> pd.DataFrame:
     """
-    IN DEV: currently imports MCS-EPC joined dataset, applies exclusion criteria to it and saves the output to S3.
+    Import MCS-EPC joined dataset, apply preprocessing, and calculate specified cost percentiles (adjusted for inflation
+    against a given base year) for MCS-certified installations of Air Source Heat Pumps (ASHP) in eight different property
+    archetypes, where ASHPs were installed within the given year range.
 
     Args:
         mcs_epc_join_date (int): which batch of most_relevant joined MCS-EPC dataset to use, by date in the format YYMMDD.
