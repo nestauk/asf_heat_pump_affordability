@@ -1,4 +1,8 @@
 data_source:
   cpi_source_url: "https://www.ons.gov.uk/generator?format=csv&uri=/economy/inflationandpriceindices/timeseries/d7ck/mm23"
+  gb_off_gas_postcodes_url: "https://www.xoserve.com/media/ey2lwltm/off_gas_postcode_register_oct_2023_v3_2.xlsx"
+  engwal_rural_urban_classification_2011_url: "https://assets.publishing.service.gov.uk/media/611bc076e90e0705464fa420/Rural_Urban_Classification_2011_lookup_tables_for_small_area_geographies.ods"
+  engwal_postcode_to_area_lookup_2011_url: "https://www.arcgis.com/sharing/rest/content/items/797715a33bf54ba2885e1e20d04c5513/data"
+  scottish_postcode_directory_2020_url: "https://www.nrscotland.gov.uk/files//geography/2023-2/SPD_PostcodeIndex_Cut_2023_2_CSV.zip"
 cpi_data:
   cpi_column_header: "CPI INDEX 05.3 : Household appliances, fitting and repairs 2015=100"
