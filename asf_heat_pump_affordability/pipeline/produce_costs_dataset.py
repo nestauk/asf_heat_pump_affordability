@@ -81,8 +81,12 @@ def main(
         f"s3://asf-heat-pump-affordability/mcs_installations_epc_most_relevant_{mcs_epc_join_date}_preprocessed_yearRange_{year_range}.csv"
     )
 
+    sample = preprocess_data.join_df_supplementary_variables(sample)
+
     # Import and process CPI data
-    cpi_05_3_df = get_data.get_df_from_url(config["data_source"]["cpi_source_url"])
+    cpi_05_3_df = get_data.get_df_from_url(
+        config["data_source"]["cpi_source_url"], file_type="csv"
+    )
     cpi_quarterly_df = preprocess_cpi.get_df_quarterly_cpi_with_adjustment_factors(
         ref_year=cpi_data_year,
         cpi_df=cpi_05_3_df,
