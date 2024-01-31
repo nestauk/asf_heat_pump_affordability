@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
+from typing import Iterable
 
 
 def generate_dict_cost_quantiles_by_archetype(
     cost_series: pd.Series,
     archetypes_masks: dict,
-    quantiles: list or np.array,
+    quantiles: Iterable[float],
 ) -> dict:
     """
     Generate dict where property archetype names from `archetype_masks` are keys and arrays of cost values at given quantile(s) are values.
@@ -13,7 +14,7 @@ def generate_dict_cost_quantiles_by_archetype(
     Args
         cost_series (pd.Series): series of (adjusted) cost values
         archetype_masks (dict): dictionary of archetype labels with corresponding pandas Series of boolean values
-        quantiles (list or np.array): quantile(s) at which to extract cost values (range 0 to 1)
+        quantiles (Iterable[float]): quantile(s) at which to extract cost values (range 0 to 1)
 
     Returns
         dict: {(str) archetype_name: (np.array) cost values at given quantile(s)}
@@ -28,14 +29,14 @@ def generate_dict_cost_quantiles_by_archetype(
 
 
 def generate_df_cost_percentiles_by_archetype_formatted(
-    archetype_costs_dict: dict, quantiles: list or np.array, ref_year: int
+    archetype_costs_dict: dict, quantiles: Iterable[float], ref_year: int
 ) -> pd.DataFrame:
     """
     Convert dict of archetype costs to dataframe.
 
     Args
         archetype_costs_dict (dict): where archetype names are keys and array of cost values at given quantile(s) are values
-        quantiles (list or np.array): quantile(s) at which cost values have been extracted (range 0 to 1)
+        quantiles (Iterable[float]): quantile(s) at which cost values have been extracted (range 0 to 1)
         ref_year (int): reference year for adjusted costs
 
     Returns:
@@ -65,7 +66,7 @@ def _generate_list_column_names(quantiles, ref_year):
     Create list of string column names from quantiles
 
     Args
-        quantiles (list or np.array): quantile(s) at which cost values have been extracted (range 0 to 1)
+        quantiles (Iterable[float]): quantile(s) at which cost values have been extracted (range 0 to 1)
         cpi_data_year (int): reference year for adjusted costs
 
     Returns

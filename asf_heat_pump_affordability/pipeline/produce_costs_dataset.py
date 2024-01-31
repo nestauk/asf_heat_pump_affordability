@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from argparse import ArgumentParser
-from typing import Optional
+from typing import Optional, Iterable
 from asf_heat_pump_affordability import config, json_schema
 from asf_heat_pump_affordability.pipeline import (
     archetypes,
@@ -68,7 +68,7 @@ def main(
     cpi_data_year: int,
     cost_year_min: Optional[int] = None,
     cost_year_max: Optional[int] = None,
-    cost_quantiles: Optional[list or np.array] = None,
+    cost_quantiles: Optional[Iterable[float]] = None,
     save_to_s3: bool = True,
 ) -> pd.DataFrame:
     """
@@ -81,7 +81,8 @@ def main(
         cpi_data_year (int): reference year to adjust heat pump installation costs to
         cost_year_min (int): min year of heat pump installation cost data to include in analysis
         cost_year_max (int): max year of heat pump installation cost data to include in analysis
-        cost_quantiles (list or np.array): quantile(s) at which to extract cost values for each property archetype (range 0 to 1)
+        cost_quantiles (Iterable[float]): quantile(s) at which to extract cost values for each property archetype (range 0 to 1).
+                                          Default produces cost deciles.
         save_to_s3 (bool): save analytical sample and output dataset to `asf-heat-pump-affordability` bucket on S3. Default True.
 
     Returns
@@ -116,7 +117,7 @@ def main(
     archetypes_dict = archetypes.classify_dict_archetypes_masks(mcs_epc_inf)
 
     # Get cost quantiles
-    if not cost_quantiles:
+    if cost_quantiles is None:
         cost_quantiles = np.arange(0, 1.1, 0.1)
     archetypes_costs_dict = (
         generate_cost_percentiles.generate_dict_cost_quantiles_by_archetype(
