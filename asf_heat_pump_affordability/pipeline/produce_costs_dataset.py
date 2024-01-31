@@ -1,8 +1,14 @@
 import pandas as pd
+import numpy as np
 from argparse import ArgumentParser
-from typing import Optional
+from typing import Optional, Iterable
 from asf_heat_pump_affordability import config, json_schema
-from asf_heat_pump_affordability.pipeline import preprocess_data, preprocess_cpi
+from asf_heat_pump_affordability.pipeline import (
+    archetypes,
+    preprocess_data,
+    preprocess_cpi,
+    generate_cost_percentiles,
+)
 from asf_heat_pump_affordability.getters import get_data
 
 
@@ -13,28 +19,44 @@ def run():
     parser = ArgumentParser()
     parser.add_argument(
         "--mcs_epc_join_date",
-        help="Specify which batch of most_relevant joined MCS-EPC dataset to use, by date in the format YYMMDD.",
+        help="Specify which batch of `most_relevant` joined MCS-EPC dataset to use, by date in the format YYMMDD.",
         type=int,
+        required=True,
     )
 
     parser.add_argument(
         "--cost_year_min",
         help="Min year of heat pump installation cost data to include in analysis. Default min year in dataset.",
-        default=None,
         type=int,
+        default=None,
     )
 
     parser.add_argument(
         "--cost_year_max",
         help="Max year of heat pump installation cost data to include in analysis. Default max year in dataset.",
-        default=None,
         type=int,
+        default=None,
     )
 
     parser.add_argument(
         "--cpi_data_year",
         help="Reference year to adjust heat pump installation costs to.",
         type=int,
+        required=True,
+    )
+
+    parser.add_argument(
+        "--cost_quantiles",
+        help="Quantile(s) at which to extract cost values for each property archetype (range 0 to 1).",
+        nargs="+",
+        type=float,
+        default=None,
+    )
+
+    parser.add_argument(
+        "--save_to_s3",
+        help="Save sample and output datasets to `asf-heat-pump-affordability` S3 bucket.",
+        action="store_true",
     )
 
     args = parser.parse_args()
@@ -46,20 +68,25 @@ def main(
     cpi_data_year: int,
     cost_year_min: Optional[int] = None,
     cost_year_max: Optional[int] = None,
+    cost_quantiles: Optional[Iterable[float]] = None,
+    save_to_s3: bool = True,
 ) -> pd.DataFrame:
     """
-    IN DEV: currently imports MCS-EPC joined dataset, applies exclusion criteria to it and saves the output to S3.
+    Import MCS-EPC joined dataset, apply preprocessing, and calculate specified cost percentiles (adjusted for inflation
+    against a given base year) for MCS-certified installations of Air Source Heat Pumps (ASHP) in eight different property
+    archetypes, where ASHPs were installed within the given year range.
 
     Args:
         mcs_epc_join_date (int): which batch of most_relevant joined MCS-EPC dataset to use, by date in the format YYMMDD.
         cpi_data_year (int): reference year to adjust heat pump installation costs to
         cost_year_min (int): min year of heat pump installation cost data to include in analysis
         cost_year_max (int): max year of heat pump installation cost data to include in analysis
+        cost_quantiles (Iterable[float]): quantile(s) at which to extract cost values for each property archetype (range 0 to 1).
+                                          Default produces cost deciles.
+        save_to_s3 (bool): save analytical sample and output dataset to `asf-heat-pump-affordability` bucket on S3. Default True.
 
     Returns
-        IN DEV
-            target return: Excel file containing cost deciles by property archetype (save to S3)
-            currently returns: analytical sample dataset with adjusted costs
+        pd.DataFrame: cost percentiles for each property archetype adjusted for inflation
     """
     # Import MCS-EPC data
     mcs_epc_data = pd.read_csv(
@@ -71,14 +98,6 @@ def main(
     # Preprocess MCS-EPC data - apply exclusion criteria
     sample = preprocess_data.apply_exclusion_criteria(
         df=mcs_epc_data, cost_year_min=cost_year_min, cost_year_max=cost_year_max
-    )
-
-    # Save analytical sample
-    year_range = "".join(
-        [str(sample["commission_year"].min()), str(sample["commission_year"].max())]
-    )
-    sample.to_csv(
-        f"s3://asf-heat-pump-affordability/mcs_installations_epc_most_relevant_{mcs_epc_join_date}_preprocessed_yearRange_{year_range}.csv"
     )
 
     # Import and process CPI data
@@ -94,7 +113,50 @@ def main(
         mcs_epc_df=sample, cpi_quarters_df=cpi_quarterly_df
     )
 
-    return mcs_epc_inf
+    # Get archetypes
+    archetypes_dict = archetypes.classify_dict_archetypes_masks(mcs_epc_inf)
+
+    # Get cost quantiles
+    if cost_quantiles is None:
+        cost_quantiles = np.arange(0, 1.1, 0.1)
+    archetypes_costs_dict = (
+        generate_cost_percentiles.generate_dict_cost_quantiles_by_archetype(
+            cost_series=mcs_epc_inf["adjusted_cost"],
+            archetypes_masks=archetypes_dict,
+            quantiles=cost_quantiles,
+        )
+    )
+    archetypes_costs_df = (
+        generate_cost_percentiles.generate_df_cost_percentiles_by_archetype_formatted(
+            archetype_costs_dict=archetypes_costs_dict,
+            quantiles=cost_quantiles,
+            ref_year=cpi_data_year,
+        )
+    )
+
+    # Save files to S3 bucket
+    if save_to_s3:
+        year_range = "".join(
+            [str(sample["commission_year"].min()), str(sample["commission_year"].max())]
+        )
+        ym_range = "_".join(
+            [
+                sample["commission_date"].dt.strftime("%Y%m").min(),
+                sample["commission_date"].dt.strftime("%Y%m").max(),
+            ]
+        )
+
+        # Save analytical sample
+        sample.to_csv(
+            f"s3://asf-heat-pump-affordability/mcs_installations_epc_most_relevant_{mcs_epc_join_date}_preprocessed_yearRange_{year_range}.csv"
+        )
+
+        # Save output
+        archetypes_costs_df.to_excel(
+            f"s3://asf-heat-pump-affordability/inflation_adjusted_costs_GBP_by_property_archetype_{cpi_data_year}_ashp_mcs_installations_{ym_range}.xlsx"
+        )
+
+    return archetypes_costs_df
 
 
 if __name__ == "__main__":

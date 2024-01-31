@@ -2,3 +2,16 @@ data_source:
   cpi_source_url: "https://www.ons.gov.uk/generator?format=csv&uri=/economy/inflationandpriceindices/timeseries/d7ck/mm23"
 cpi_data:
   cpi_column_header: "CPI INDEX 05.3 : Household appliances, fitting and repairs 2015=100"
+construction_age_band_1950_split:
+  "England and Wales: before 1900": True
+  "Scotland: before 1919": True
+  "1900-1929": True
+  "1930-1949": True
+  "1950-1966": False
+  "1965-1975": False
+  "1976-1983": False
+  "1983-1991": False
+  "1991-1998": False
+  "1996-2002": False
+  "2003-2007": False
+  "2007 onwards": False
