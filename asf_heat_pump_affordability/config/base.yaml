@@ -1,5 +1,8 @@
 data_source:
   cpi_source_url: "https://www.ons.gov.uk/generator?format=csv&uri=/economy/inflationandpriceindices/timeseries/d7ck/mm23"
+  gb_off_gas_postcodes_url: "https://www.xoserve.com/media/ey2lwltm/off_gas_postcode_register_oct_2023_v3_2.xlsx" # Oct 2023 data
+  gb_ons_postcode_dir_url: "https://www.arcgis.com/sharing/rest/content/items/487a5ba62c8b4da08f01eb3c08e304f6/data" # Aug 2023 data
+  gb_ons_postcode_dir_file_path: "Data/ONSPD_AUG_2023_UK.csv" # Aug 2023 data
 cpi_data:
   cpi_column_header: "CPI INDEX 05.3 : Household appliances, fitting and repairs 2015=100"
 construction_age_band_1950_split:
@@ -15,3 +18,22 @@ construction_age_band_1950_split:
   "1996-2002": False
   "2003-2007": False
   "2007 onwards": False
+rural_urban_classification_mapping:
+  "A1": "urban" # England and Wales codes
+  "B1": "urban"
+  "C1": "urban"
+  "C2": "urban"
+  "D1": "rural"
+  "D2": "rural"
+  "E1": "rural"
+  "E2": "rural"
+  "F1": "rural"
+  "F2": "rural"
+  "1": "urban" # Scotland codes
+  "2": "urban"
+  "3": "urban"
+  "4": "urban"
+  "5": "urban"
+  "6": "rural"
+  "7": "rural"
+  "8": "rural"
