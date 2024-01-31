@@ -95,10 +95,11 @@ def main(
         parse_dates=["commission_date", "INSPECTION_DATE"],
     )
 
-    # Preprocess MCS-EPC data - apply exclusion criteria
+    # Preprocess MCS-EPC data - apply exclusion criteria and add supplementary variables
     sample = preprocess_data.apply_exclusion_criteria(
         df=mcs_epc_data, cost_year_min=cost_year_min, cost_year_max=cost_year_max
     )
+    sample = preprocess_data.join_df_supplementary_variables(sample)
 
     # Import and process CPI data
     cpi_05_3_df = get_data.get_df_from_url(config["data_source"]["cpi_source_url"])

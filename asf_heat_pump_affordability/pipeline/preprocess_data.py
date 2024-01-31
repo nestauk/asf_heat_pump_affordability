@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from typing import Optional
+from asf_heat_pump_affordability.getters import get_data
 
 
 def apply_exclusion_criteria(
@@ -43,6 +44,24 @@ def apply_exclusion_criteria(
     ]
     df = df.dropna(subset=key_variables, how="any")
     df = df[df["tech_type"] == "Air Source Heat Pump"]
+    df["postcode"] = df["postcode"].str.upper().replace(" ", "")
+
+    return df
+
+
+def join_df_supplementary_variables(mcs_epc_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Join supplementary variables to MCS-EPC data: rural-urban classification and off-gas status of properties.
+    Args
+        mcs_epc_df (pd.DataFrame): joined MCS-EPC dataframe
+    Returns
+        pd.DataFrame: MCS-EPC data with off-gas and rural-urban classification variables
+    """
+    off_gas_postcodes_list = get_data.get_list_off_gas_postcodes()
+    ons_pd_df = get_data.get_df_onspd_gb()
+
+    df = mcs_epc_df.merge(ons_pd_df, how="left", on="postcode")
+    df["off_gas"] = df["postcode"].isin(off_gas_postcodes_list)
 
     return df
 
