@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from io import BytesIO
 from zipfile import ZipFile
-from typing import Union
 from asf_heat_pump_affordability import config, json_schema
 
 
@@ -115,7 +114,7 @@ def get_df_onspd_gb(pcd_col: str = "pcd", ruc_col: str = "ru11ind") -> pd.DataFr
     return df
 
 
-def _ruc_code_conversion(ruc_code: Union[str, int, float]):
+def _ruc_code_conversion(ruc_code: str) -> str:
     """
     Convert rural-urban classification code to 2-fold rural-urban classification; either "rural" or "urban".
 
