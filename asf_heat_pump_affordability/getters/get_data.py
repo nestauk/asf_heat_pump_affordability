@@ -81,7 +81,7 @@ def get_df_imd_income_deciles_engwal(sheet_name: str = "Income") -> pd.DataFrame
         sheet_name (str): name of sheet where income deprivation data is stored in file
 
     Returns
-        pd.DataFrame: income rank deciles by LSOA code for England and Wales
+        pd.DataFrame: income deprivation rank deciles by LSOA code for England and Wales
     """
     df = get_df_from_excel_url(
         config["data_source"]["engwal_imd_income_url"], sheet_name=sheet_name
@@ -111,7 +111,7 @@ def get_df_imd_income_deciles_sct(
         sheet_name (str): name of sheet where income deprivation data is stored in file
 
     Returns
-        pd.DataFrame: income rank deciles by Data Zone for Scotland
+        pd.DataFrame: income deprivation rank deciles by Data Zone for Scotland
     """
     df = get_df_from_excel_url(
         config["data_source"]["sct_imd_income_url"], sheet_name=sheet_name
