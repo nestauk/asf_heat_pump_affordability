@@ -73,6 +73,58 @@ def _get_content_from_url(url: str) -> BytesIO:
     return content
 
 
+def get_df_imd_income_deciles_engwal(sheet_name: str = "Income") -> pd.DataFrame:
+    """
+    Get dataframe of income deprivation rank deciles for LSOAs in England and Wales.
+
+    Args
+        sheet_name (str): name of sheet where income deprivation data is stored in file
+
+    Returns
+        pd.DataFrame: income rank deciles by LSOA code for England and Wales
+    """
+    df = get_df_from_excel_url(
+        config["data_source"]["engwal_imd_income_url"], sheet_name=sheet_name
+    )
+    df["engwal_imd_income_rank_decile"] = pd.qcut(
+        df["Income Domain Rank (where 1 is most deprived)"],
+        10,
+        labels=np.arange(1, 11, 1),
+    )
+    df = df[
+        [
+            "LSOA Code (2011)",
+            "Income Domain Rank (where 1 is most deprived)",
+            "engwal_imd_income_rank_decile",
+        ]
+    ]
+    return df
+
+
+def get_df_imd_income_deciles_sct(
+    sheet_name: str = "SIMD 2020v2 ranks",
+) -> pd.DataFrame:
+    """
+    Get dataframe of income deprivation rank deciles for Data Zones in Scotland.
+
+    Args
+        sheet_name (str): name of sheet where income deprivation data is stored in file
+
+    Returns
+        pd.DataFrame: income rank deciles by Data Zone for Scotland
+    """
+    df = get_df_from_excel_url(
+        config["data_source"]["sct_imd_income_url"], sheet_name=sheet_name
+    )
+    df["sct_imd_income_rank_decile"] = pd.qcut(
+        df["SIMD2020v2_Income_Domain_Rank"], 10, labels=np.arange(1, 11, 1)
+    )
+    df = df[
+        ["Data_Zone", "SIMD2020v2_Income_Domain_Rank", "sct_imd_income_rank_decile"]
+    ]
+    return df
+
+
 def get_list_off_gas_postcodes(sheet_name: str = "Off-Gas Postcodes 2023") -> list:
     """
     Get list of off-gas postcodes in Great Britain.

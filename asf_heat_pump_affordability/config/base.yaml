@@ -3,6 +3,8 @@ data_source:
   gb_off_gas_postcodes_url: "https://www.xoserve.com/media/ey2lwltm/off_gas_postcode_register_oct_2023_v3_2.xlsx" # Oct 2023 data
   gb_ons_postcode_dir_url: "https://www.arcgis.com/sharing/rest/content/items/487a5ba62c8b4da08f01eb3c08e304f6/data" # Aug 2023 data
   gb_ons_postcode_dir_file_path: "Data/ONSPD_AUG_2023_UK.csv" # Aug 2023 data
+  engwal_imd_income_url: "https://assets.publishing.service.gov.uk/media/5fca57d2e90e0762aabe9444/2019_Income_and_Employment_Domains_-_England_and_Wales.ods" # IMD 2019
+  sct_imd_income_url: "https://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/01/scottish-index-of-multiple-deprivation-2020-ranks-and-domain-ranks/documents/scottish-index-of-multiple-deprivation-2020-ranks-and-domain-ranks/scottish-index-of-multiple-deprivation-2020-ranks-and-domain-ranks/govscot%3Adocument/SIMD%2B2020v2%2B-%2Branks.xlsx" # IMD 2020v2
 cpi_data:
   cpi_column_header: "CPI INDEX 05.3 : Household appliances, fitting and repairs 2015=100"
 construction_age_band_1950_split:
