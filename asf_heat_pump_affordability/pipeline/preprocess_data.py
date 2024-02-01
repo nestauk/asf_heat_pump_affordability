@@ -51,7 +51,8 @@ def apply_exclusion_criteria(
 
 def join_df_supplementary_variables(mcs_epc_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Join supplementary variables to MCS-EPC data: rural-urban classification and off-gas status of properties.
+    Join supplementary variables to MCS-EPC data: rural-urban classification; off-gas status; and Index of Multiple
+    Deprivation (IMD) income deciles for England and Wales.
     Args
         mcs_epc_df (pd.DataFrame): joined MCS-EPC dataframe
     Returns
@@ -59,8 +60,14 @@ def join_df_supplementary_variables(mcs_epc_df: pd.DataFrame) -> pd.DataFrame:
     """
     off_gas_postcodes_list = get_data.get_list_off_gas_postcodes()
     ons_pd_df = get_data.get_df_onspd_gb()
+    engwal_imd_df = get_data.get_df_imd_income_deciles_engwal()
+    sct_imd_df = get_data.get_df_imd_income_deciles_sct()
 
-    df = mcs_epc_df.merge(ons_pd_df, how="left", on="postcode")
+    df = (
+        mcs_epc_df.merge(ons_pd_df, how="left", on="postcode")
+        .merge(engwal_imd_df, how="left", left_on="lsoa11", right_on="LSOA Code (2011)")
+        .merge(sct_imd_df, how="left", left_on="lsoa11", right_on="Data_Zone")
+    )
     df["off_gas"] = df["postcode"].isin(off_gas_postcodes_list)
 
     return df
