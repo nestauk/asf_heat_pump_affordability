@@ -3,39 +3,75 @@ import pandas as pd
 import numpy as np
 from io import BytesIO
 from zipfile import ZipFile
-from typing import Optional, Union
-from asf_heat_pump_affordability import config
+from typing import Union
+from asf_heat_pump_affordability import config, json_schema
 
 
-def get_df_from_url(
-    url: str, extract_file: Optional[str] = None, **kwargs
-) -> pd.DataFrame:
+def get_df_from_csv_url(url: str, **kwargs) -> pd.DataFrame:
     """
-    Get dataframe from file stored at URL.
+    Get dataframe from CSV file stored at URL.
 
     Args
-        url (str): URL location of file download
-        extract_file (str): name of file to extract
-        **kwargs
+        url (str): URL location of CSV file download
+        **kwargs for pandas.read_csv()
 
     Returns
-        pd.DataFrame: dataframe from file
+        pd.DataFrame: dataframe from CSV file
+    """
+    content = _get_content_from_url(url)
+    df = pd.read_csv(content, **kwargs)
+
+    return df
+
+
+def get_df_from_excel_url(url: str, **kwargs) -> pd.DataFrame:
+    """
+    Get dataframe from Excel file stored at URL.
+
+    Args
+        url (str): URL location of Excel file download
+        **kwargs for pandas.read_excel()
+
+    Returns
+        pd.DataFrame: dataframe from Excel file
+    """
+    content = _get_content_from_url(url)
+    df = pd.read_excel(content, **kwargs)
+
+    return df
+
+
+def get_df_from_zip_url(url: str, extract_file: str, **kwargs) -> pd.DataFrame:
+    """
+    Get dataframe from zip file stored at URL.
+
+    Args
+        url (str): URL location of zip file download
+        extract_file (str): name of file to extract
+        **kwargs for pandas.read_csv()
+
+    Returns
+        pd.DataFrame: dataframe from zip file
+    """
+    content = _get_content_from_url(url)
+    df = pd.read_csv(ZipFile(content).open(name=extract_file), **kwargs)
+
+    return df
+
+
+def _get_content_from_url(url: str) -> BytesIO:
+    """
+    Get BytesIO stream from URL.
+    Args
+        url (str): URL
+    Returns
+        io.BytesIO: content of URL as BytesIO stream
     """
     with requests.Session() as session:
         res = session.get(url)
-    if BytesIO(res.content).getvalue()[:4] == bytes(
-        "PK\x03\x04", "utf-8"
-    ):  # check for zip file signature
-        try:
-            df = pd.read_excel(BytesIO(res.content), **kwargs)
-        except pd.errors.OptionError:
-            df = pd.read_csv(
-                ZipFile(BytesIO(res.content)).open(name=extract_file), **kwargs
-            )
-    else:
-        df = pd.read_csv(BytesIO(res.content), **kwargs)
+    content = BytesIO(res.content)
 
-    return df
+    return content
 
 
 def get_list_off_gas_postcodes(sheet_name: str = "Off-Gas Postcodes 2023") -> list:
@@ -46,7 +82,7 @@ def get_list_off_gas_postcodes(sheet_name: str = "Off-Gas Postcodes 2023") -> li
     Returns
         list: off-gas postcodes in Great Britain
     """
-    df = get_df_from_url(
+    df = get_df_from_excel_url(
         url=config["data_source"]["gb_off_gas_postcodes_url"],
         sheet_name=sheet_name,
     )
@@ -67,9 +103,10 @@ def get_df_onspd_gb(pcd_col: str = "pcd", ruc_col: str = "ru11ind") -> pd.DataFr
     Returns
         pd.DataFrame: postcode directory for Great Britain
     """
-    df = get_df_from_url(
+    df = get_df_from_zip_url(
         url=config["data_source"]["gb_ons_postcode_dir_url"],
         extract_file=config["data_source"]["gb_ons_postcode_dir_file_path"],
+        dtype=json_schema["onspd_data"],
     )
 
     df["postcode"] = df[pcd_col].str.replace(" ", "")
@@ -88,10 +125,6 @@ def _ruc_code_conversion(ruc_code: Union[str, int, float]):
     Returns
         str: 2-fold rural-urban classification; "rural" or "urban"
     """
-    if isinstance(ruc_code, float) and not np.isnan(
-        ruc_code
-    ):  # convert RUC codes that appear as float values
-        ruc_code = str(int(ruc_code))
     try:
         ruc = config["rural_urban_classification_mapping"][ruc_code]
     except KeyError:
