@@ -36,7 +36,7 @@ quantiles = produce_costs_dataset.main(
 quantiles
 
 # %%
-quantiles.to_excel("./20240213_mcs_epc_archetype_heat_pump_cost_deciles.xlsx")
+# quantiles.to_excel("./20240213_mcs_epc_archetype_heat_pump_cost_deciles.xlsx")
 
 # %%
 f, ax = pyplot.subplots(figsize=(8, 6))
@@ -95,7 +95,9 @@ data["AGE_BAND_2CAT"] = data["CONSTRUCTION_AGE_BAND"].map(
 # ## Quantile Regression
 #
 # ### Model 1: basic model
-# Binary built age variable.
+# Binary built age variable only.
+#
+# NB mean_ci is the confidence interval of the model e.g. based on the standard errors of the model coefficients. obs_ci is the confidence interval of the model plus the residuals, accounting for the sum of the variance in the predicted means and the residual variance.
 
 # %%
 res = []
@@ -214,9 +216,21 @@ ax.legend()
 # The archetypes model is really a kind of partial interaction. We can fit an equivalent model, but looking at the predictions if it performs better it is not by a meaningful amount. It's also not immediately apparent how you would collapse some of the categories to form an archetype - an average weighted by representation in the data might be the answer.
 
 # %%
+# Enclosed terrace types are relatively rare, so let's collapse into regular terraces.
+data["BUILT_FORM"] = (
+    data["BUILT_FORM"]
+    .map({"Enclosed End-Terrace": "End-Terrace", "Enclosed Mid-Terrace": "Mid-Terrace"})
+    .fillna(data["BUILT_FORM"])
+)
+
+# %%
+# property-type, built-form - age interaction.
+# Exclude park homes as they're not an archetype of interest.
+# Model is unstable - presumably due to low cell sizes, model struggles to predict on Maisonette.
 model = sm.quantreg(
-    "adjusted_cost ~ PROPERTY_TYPE:BUILT_FORM:AGE_BAND_2CAT -1", data
-).fit(0.2)
+    "adjusted_cost ~ PROPERTY_TYPE:BUILT_FORM:AGE_BAND_2CAT",
+    data.loc[lambda df: df["PROPERTY_TYPE"] != "Park home", :],
+).fit(0.2, max_iter=10_000)
 
 # %%
 pred = model.get_prediction(
@@ -236,18 +250,74 @@ pred.summary_frame()
 model2[model2["QUANTILE"] == 0.2].tail(2)
 
 # %% [markdown]
-# ### Model 4: Archetypes + Independent effect of Rural-Urban Setting.
+# ### Model 4: Archetypes + Room Adjustment
 #
-# Fit the model "adjusted_cost ~ archetype + rural_urban", see what the independent effect of setting does to the estimates.
+# Rooms actually makes more of a difference to model fit (variance explained) than the archetype factors measured. Unfortunately using it reduces the sample by ~7,000 records.
+#
+# However, this adjustment calls into question the validity of the age-based archetypes (at least for flats at the median).
+#
+# Here we're modelling it as an independendent effect as we're currently treating it as a continuous variable.
 
 # %%
-
-# %% [markdown]
-# ### Model 5: Archetpes interacted with Rural-Urban Setting.
-#
-# Fit the model "adjusted_cost ~ archetype * rural_urban" or "adjusted_cost ~ archetype : rural_urban", see what the effect of setting does to the estimates, in particular see whether it produces better results than model 4. Explore uncertainty in predictions, bigger risk here of small group sizes leading to poor estimates.
+model = sm.quantreg("adjusted_cost ~ archetype + NUMBER_HABITABLE_ROOMS", data).fit(0.5)
 
 # %%
+# Predict at the mean for each archetype
+pred = model.get_prediction(
+    pandas.DataFrame(
+        {
+            "archetype": ["pre_1950_flat", "post_1950_flat"],
+            "NUMBER_HABITABLE_ROOMS": [3.150685, 2.378056],
+        }
+    )
+)
+
+# %%
+# These estimates should be similar to the unadjusted values from model 2.
+# Take an example of flats.
+pred.summary_frame()
+
+# %%
+model2.loc[
+    lambda df: (df["QUANTILE"] == 0.5)
+    & df["archetype"].isin(["pre_1950_flat", "post_1950_flat"])
+]
+
+# %%
+# However, compare like for like flat estimates.
+# Predict at the mean for each archetype
+pred = (
+    model.get_prediction(
+        pandas.DataFrame(
+            {
+                "archetype": [
+                    "pre_1950_flat",
+                    "post_1950_flat",
+                    "pre_1950_flat",
+                    "post_1950_flat",
+                    "pre_1950_flat",
+                    "post_1950_flat",
+                ],
+                "NUMBER_HABITABLE_ROOMS": [1, 1, 2, 2, 3, 3],
+            }
+        )
+    )
+    .summary_frame()
+    .assign(
+        archetype=[
+            "pre_1950_flat",
+            "post_1950_flat",
+            "pre_1950_flat",
+            "post_1950_flat",
+            "pre_1950_flat",
+            "post_1950_flat",
+        ],
+        NUMBER_HABITABLE_ROOMS=[1, 1, 2, 2, 3, 3],
+    )
+)
+
+# %%
+pred
 
 # %% [markdown]
-# Further Models - explore models for IMD (in Eng and Wales) or off gas grid homes. Not sure I have a strong hypothesis for either - off gas grid maybe more expensive if more work needed to central heating system? IMD data might need aggregation if too few data points in low income deciles.
+# This suggests that - at the median - differences in the cost to install a heat pump in a flat is explained by the size of the flat (number of rooms), rather than the age of the flat (which seems to have been previously assumed). The difference exists because the composition of flat archetypes for which we have data is different for the two archetypes.
