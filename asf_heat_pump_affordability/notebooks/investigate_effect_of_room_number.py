@@ -457,17 +457,16 @@ for quantile in np.arange(0.1, 1, 0.1):
     )
 
 predictions = pd.concat(results)
-df = predictions[["quantile", "archetype_label", "mean"]]
 
 # +
 ## Plot estimated installation cost for each archetype
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 5))
 
-for archetype in df.archetype_label.unique():
+for archetype in predictions.archetype_label.unique():
     ax.plot(
         np.arange(0.1, 1, 0.1),
-        df[df["archetype_label"] == archetype]["mean"],
+        predictions[predictions["archetype_label"] == archetype]["mean"],
         label=archetype,
     )
 
@@ -481,9 +480,11 @@ plt.show()
 # +
 ## Format df to save to Excel
 
-final = df.pivot(index="archetype_label", columns="quantile", values="mean").reindex(
-    predict_on.archetype_label.to_list()
-)
+predictions["rounded_cost"] = round(predictions["mean"], -1).apply(int)
+
+final = predictions.pivot(
+    index="archetype_label", columns="quantile", values="rounded_cost"
+).reindex(predict_on.archetype_label.to_list())
 final.columns.name = None
 final.columns = [
     "_".join(["cost_percentile", str(int(col * 100))]) for col in final.columns
