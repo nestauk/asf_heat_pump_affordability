@@ -19,35 +19,35 @@ def run():
     parser = ArgumentParser()
     parser.add_argument(
         "--mcs_epc_join_date",
-        help="Specify which batch of `most_relevant` joined MCS-EPC dataset to use, by date in the format YYMMDD.",
+        help="Required: specify which batch of `most_relevant` joined MCS-EPC dataset to use, by date in the format YYMMDD. Type %(type)s",
         type=int,
         required=True,
     )
 
     parser.add_argument(
         "--cost_year_min",
-        help="Min year of heat pump installation cost data to include in analysis. Default min year in dataset.",
+        help="Min year of heat pump installation cost data to include in analysis. Default min year in dataset. Type %(type)s",
         type=int,
         default=None,
     )
 
     parser.add_argument(
         "--cost_year_max",
-        help="Max year of heat pump installation cost data to include in analysis. Default max year in dataset.",
+        help="Max year of heat pump installation cost data to include in analysis. Default max year in dataset. Type %(type)s",
         type=int,
         default=None,
     )
 
     parser.add_argument(
         "--cpi_data_year",
-        help="Reference year to adjust heat pump installation costs to.",
+        help="Required: reference year to adjust heat pump installation costs to. Type %(type)s",
         type=int,
         required=True,
     )
 
     parser.add_argument(
         "--cost_quantiles",
-        help="Quantile(s) at which to extract cost values for each property archetype (range 0 to 1).",
+        help="Quantile(s) at which to extract cost values for each property archetype (range 0 to 1). Type %(type)s",
         nargs="+",
         type=float,
         default=None,
