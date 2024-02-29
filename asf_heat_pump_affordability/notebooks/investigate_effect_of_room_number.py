@@ -53,7 +53,7 @@ data = pd.read_csv(
 
 # +
 ## Get CPI data with adjustment factors for 2023 base year
-cpi_05_3_df = get_data.get_df_from_url(config["data_source"]["cpi_source_url"])
+cpi_05_3_df = get_data.get_df_from_csv_url(config["data_source"]["cpi_source_url"])
 cpi_quarterly_df = preprocess_cpi.get_df_quarterly_cpi_with_adjustment_factors(
     ref_year=2023,
     cpi_df=cpi_05_3_df,
@@ -95,14 +95,8 @@ _data = _data.loc[_data["PROPERTY_TYPE"] != "Park home"]
 _data = _data[_data["NUMBER_HABITABLE_ROOMS"] != 0]
 _data.dropna(subset=["NUMBER_HABITABLE_ROOMS"], inplace=True)
 
-
 # Create archetype4 column (i.e. property type)
-def remove_prefix(x):
-    _list = x.split("_")
-    return "_".join(_list[2:])
-
-
-_data["archetype4"] = _data["archetype"].apply(remove_prefix)
+_data["archetype4"] = _data["archetype"].str.split("_", n=2, expand=True)[2]
 # -
 
 ## View total rows removed
