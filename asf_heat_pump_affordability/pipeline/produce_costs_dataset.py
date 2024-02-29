@@ -19,35 +19,35 @@ def run():
     parser = ArgumentParser()
     parser.add_argument(
         "--mcs_epc_join_date",
-        help="Specify which batch of `most_relevant` joined MCS-EPC dataset to use, by date in the format YYMMDD.",
+        help="Required: specify which batch of `most_relevant` joined MCS-EPC dataset to use, by date in the format YYMMDD. Type %(type)s",
         type=int,
         required=True,
     )
 
     parser.add_argument(
         "--cost_year_min",
-        help="Min year of heat pump installation cost data to include in analysis. Default min year in dataset.",
+        help="Min year of heat pump installation cost data to include in analysis. Default min year in dataset. Type %(type)s",
         type=int,
         default=None,
     )
 
     parser.add_argument(
         "--cost_year_max",
-        help="Max year of heat pump installation cost data to include in analysis. Default max year in dataset.",
+        help="Max year of heat pump installation cost data to include in analysis. Default max year in dataset. Type %(type)s",
         type=int,
         default=None,
     )
 
     parser.add_argument(
         "--cpi_data_year",
-        help="Reference year to adjust heat pump installation costs to.",
+        help="Required: reference year to adjust heat pump installation costs to. Type %(type)s",
         type=int,
         required=True,
     )
 
     parser.add_argument(
         "--cost_quantiles",
-        help="Quantile(s) at which to extract cost values for each property archetype (range 0 to 1).",
+        help="Quantile(s) at which to extract cost values for each property archetype (range 0 to 1). Type %(type)s",
         nargs="+",
         type=float,
         default=None,
@@ -95,13 +95,14 @@ def main(
         parse_dates=["commission_date", "INSPECTION_DATE"],
     )
 
-    # Preprocess MCS-EPC data - apply exclusion criteria
+    # Preprocess MCS-EPC data - apply exclusion criteria and add supplementary variables
     sample = preprocess_data.apply_exclusion_criteria(
         df=mcs_epc_data, cost_year_min=cost_year_min, cost_year_max=cost_year_max
     )
+    sample = preprocess_data.join_df_supplementary_variables(sample)
 
     # Import and process CPI data
-    cpi_05_3_df = get_data.get_df_from_url(config["data_source"]["cpi_source_url"])
+    cpi_05_3_df = get_data.get_df_from_csv_url(config["data_source"]["cpi_source_url"])
     cpi_quarterly_df = preprocess_cpi.get_df_quarterly_cpi_with_adjustment_factors(
         ref_year=cpi_data_year,
         cpi_df=cpi_05_3_df,
