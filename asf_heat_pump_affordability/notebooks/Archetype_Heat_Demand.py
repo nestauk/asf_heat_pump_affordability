@@ -73,12 +73,25 @@ for (
 # We can use the heat demand estimates provided to MCS by heat pump installers.
 
 # %%
+# hard-coded reference to archetypes
+archetypes = [
+    "pre_1950_flat",
+    "post_1950_flat",
+    "pre_1950_semi_terraced_house",
+    "post_1950_semi_terraced_house",
+    "pre_1950_detached_house",
+    "post_1950_detached_house",
+    "pre_1950_bungalow",
+    "post_1950_bungalow",
+]
+
+# %%
 (
     data.groupby("archetype", as_index=False)["heat_demand"]
     .describe()
     .sort_values(
         by="archetype",
-        key=lambda x: x.map(dict(zip(quantiles.index, range(len(quantiles.index))))),
+        key=lambda x: x.map(dict(zip(archetypes, range(len(archetypes))))),
     )
     .reset_index(drop=True)
 )
@@ -93,7 +106,7 @@ for (
 data = data.loc[lambda df: df["NUMBER_HABITABLE_ROOMS"].between(1, 12), :]
 
 # %%
-# This is a decent model that explains ~24% of the variation in heat_demand.
+# This is a decent model that explains ~24% of the fit for heat_demand.
 # Total floor area is a better predictor, but this allows us to map to the archtype for cost more easily.
 model = sm.quantreg("heat_demand ~ archetype + NUMBER_HABITABLE_ROOMS", data=data).fit(
     0.5
@@ -106,10 +119,10 @@ pred = (
             {
                 "archetype": [
                     label
-                    for labels in [[archetype] * 13 for archetype in quantiles.index]
+                    for labels in [[archetype] * 12 for archetype in archetypes]
                     for label in labels
                 ],
-                "NUMBER_HABITABLE_ROOMS": list(numpy.linspace(0, 12, 13)) * 8,
+                "NUMBER_HABITABLE_ROOMS": list(numpy.linspace(1, 12, 12)) * 8,
             }
         )
     )
@@ -117,17 +130,17 @@ pred = (
     .assign(
         archetype=[
             label
-            for labels in [[archetype] * 13 for archetype in quantiles.index]
+            for labels in [[archetype] * 12 for archetype in archetypes]
             for label in labels
         ],
-        NUMBER_HABITABLE_ROOMS=list(numpy.linspace(0, 12, 13)) * 8,
+        NUMBER_HABITABLE_ROOMS=list(numpy.linspace(1, 12, 12)) * 8,
     )
 )
 
 # %%
 f, ax = pyplot.subplots(figsize=(8, 6))
 
-for archetype in quantiles.index:
+for archetype in archetypes:
     ax.plot(
         pred.loc[lambda df: df["archetype"] == archetype, "NUMBER_HABITABLE_ROOMS"],
         pred.loc[lambda df: df["archetype"] == archetype, "mean"],
@@ -135,7 +148,7 @@ for archetype in quantiles.index:
     )
 
 ax.legend()
-ax.set_xlabel("Total Floor Area (m2)")
+ax.set_xlabel("Number of Habitable Rooms")
 ax.set_ylabel("Estimated Annual Household Heat Demand (kWh)")
 
 # %%
@@ -151,10 +164,10 @@ pred = (
             {
                 "archetype": [
                     label
-                    for labels in [[archetype] * 13 for archetype in quantiles.index]
+                    for labels in [[archetype] * 12 for archetype in archetypes]
                     for label in labels
                 ],
-                "NUMBER_HABITABLE_ROOMS": list(numpy.linspace(0, 12, 13)) * 8,
+                "NUMBER_HABITABLE_ROOMS": list(numpy.linspace(1, 12, 12)) * 8,
             }
         )
     )
@@ -162,15 +175,14 @@ pred = (
     .assign(
         archetype=[
             label
-            for labels in [[archetype] * 13 for archetype in quantiles.index]
+            for labels in [[archetype] * 12 for archetype in archetypes]
             for label in labels
         ],
-        NUMBER_HABITABLE_ROOMS=list(numpy.linspace(0, 12, 13)) * 8,
+        NUMBER_HABITABLE_ROOMS=list(numpy.linspace(1, 12, 12)) * 8,
     )
 )
 
 # %%
-# Hmm. really not sure about the pre-1950 flats in particular.
 f, ax = pyplot.subplots(figsize=(8, 6))
 
 for archetype in quantiles.index:
@@ -181,7 +193,7 @@ for archetype in quantiles.index:
     )
 
 ax.legend()
-ax.set_xlabel("Total Floor Area (m2)")
+ax.set_xlabel("Number of Habitable Rooms")
 ax.set_ylabel("Estimated Annual Household Heat Demand (kWh)")
 
 # %%
@@ -210,7 +222,7 @@ collapse_archetypes = {
 # Bungalow: 4 rooms (e.g. 2 bedrooms, 1 reception, 1 dining)
 
 # %%
-# This is a decent model that explains ~24% of the variation in heat_demand.
+# This is a decent model that explains ~24% of the fit for heat_demand.
 model = sm.quantreg("heat_demand ~ archetype + NUMBER_HABITABLE_ROOMS", data=data).fit(
     0.5
 )
@@ -220,15 +232,13 @@ pred = (
     model.get_prediction(
         pandas.DataFrame(
             {
-                "archetype": list(quantiles.index),
+                "archetype": archetypes,
                 "NUMBER_HABITABLE_ROOMS": [2, 2, 5, 5, 7, 7, 4, 4],
             }
         )
     )
     .summary_frame()
-    .assign(
-        archetype=list(quantiles.index), NUMBER_HABITABLE_ROOMS=[2, 2, 5, 5, 7, 7, 4, 4]
-    )
+    .assign(archetype=archetypes, NUMBER_HABITABLE_ROOMS=[2, 2, 5, 5, 7, 7, 4, 4])
 )
 
 # %%
