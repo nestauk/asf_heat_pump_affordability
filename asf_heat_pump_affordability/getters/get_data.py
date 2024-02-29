@@ -1,6 +1,5 @@
 import requests
 import pandas as pd
-import numpy as np
 from io import BytesIO
 from zipfile import ZipFile
 from asf_heat_pump_affordability import config, json_schema
@@ -91,13 +90,16 @@ def get_list_off_gas_postcodes(sheet_name: str = "Off-Gas Postcodes 2023") -> li
     return off_gas_postcodes_list
 
 
-def get_df_onspd_gb(pcd_col: str = "pcd", ruc_col: str = "ru11ind") -> pd.DataFrame:
+def get_df_onspd_gb(
+    pcd_col: str = "pcd", ruc_col: str = "ru11ind", lsoa_col: str = "lsoa11"
+) -> pd.DataFrame:
     """
     Get ONS postcode directory (ONSPD) for Great Britain.
 
     Args
         pcd_col (str): name of column containing postcodes
         ruc_col (str): name of column containing rural-urban classification codes
+        lsoa_col (str): name of column containing LSOA code
 
     Returns
         pd.DataFrame: postcode directory for Great Britain
@@ -106,6 +108,7 @@ def get_df_onspd_gb(pcd_col: str = "pcd", ruc_col: str = "ru11ind") -> pd.DataFr
         url=config["data_source"]["gb_ons_postcode_dir_url"],
         extract_file=config["data_source"]["gb_ons_postcode_dir_file_path"],
         dtype=json_schema["onspd_data"],
+        usecols=[pcd_col, ruc_col, lsoa_col],
     )
 
     df["postcode"] = df[pcd_col].str.replace(" ", "")
@@ -124,9 +127,5 @@ def _ruc_code_conversion(ruc_code: str) -> str:
     Returns
         str: 2-fold rural-urban classification; "rural" or "urban"
     """
-    try:
-        ruc = config["rural_urban_classification_mapping"][ruc_code]
-    except KeyError:
-        ruc = np.nan
 
-    return ruc
+    return config["rural_urban_classification_mapping"].get(ruc_code)
