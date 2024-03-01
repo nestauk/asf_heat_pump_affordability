@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+import numpy as np
 from io import BytesIO
 from zipfile import ZipFile
 from asf_heat_pump_affordability import config, json_schema
