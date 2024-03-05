@@ -18,20 +18,16 @@ post-1950 construction. Costs are adjusted for inflation against a chosen base y
 - Navigate to your local copy of the repo
 - Activate the conda environment with `conda activate asf_heat_pump_affordability`
 
-## Run script from terminal
+## Recreate cost policy analysis dataset
 
-To recreate the data used in the Q1 2024 cost policy analysis, run the following line (you will need access to the `asf-core-data` bucket on S3):
+To recreate the data used in the Q1 2024 cost policy analysis, run the following lines in your terminal:
 
-`python asf_heat_pump_affordability/pipeline/produce_costs_dataset.py --mcs_epc_join_date 231009 --cost_year_min 2021 --cpi_data_year 2023`
+```
+pip install jupytext
+jupytext --to notebook asf_heat_pump_affordability/notebooks/investigate_effect_of_room_number.py
+```
 
-Alternatively, run the following line for more information on possible command line arguments:
-
-`python asf_heat_pump_affordability/pipeline/produce_costs_dataset.py -h`
-
-Notes:
-
-- Use `--save_to_s3` arg to save output dataframe as `.xlsx` file into `asf-heat-pump-affordability` bucket on S3.
-- `--cost_quantiles` arg can accept a series of values or a single value, e.g. `--cost-quantiles 0 0.25 0.5 0.75 1`.
+Run all lines of the resulting `investigate_effect_of_room_number.ipynb` notebook. The analytical output dataset will be saved into the `asf-heat-pump-affordability` bucket on S3.
 
 ## Data sources - Q1 2024 cost policy analysis
 
@@ -58,6 +54,7 @@ asf_heat_pump_affordability
 │    get_data.py - functions to retrieve data from external sources
 ├───notebooks
 │    identify_and_review_analytical_sample.py - notebook to explore impact of applying exclusion criteria on core MCS-EPC dataset
+│    investigate_effect_of_room_number.py - notebook using quantile regression models to estimate installation costs by archetype and room number
 ├───pipeline
 │    archetypes.py - functions to classify housing archetypes
 │    generate_cost_percentiles.py - functions to generate cost percentiles by archetype
