@@ -125,7 +125,7 @@ def get_df_imd_income_deciles_sct(
     return df
 
 
-def get_list_off_gas_postcodes(sheet_name: str = "Off-Gas Postcodes 2023") -> list:
+def get_list_off_gas_postcodes(sheet_name: str = "Off-Gas Postcodes 2024") -> list:
     """
     Get list of off-gas postcodes in Great Britain.
     Args
