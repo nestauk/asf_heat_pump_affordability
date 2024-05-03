@@ -3,6 +3,7 @@
 #   jupytext:
 #     cell_metadata_filter: -all
 #     comment_magics: true
+#     formats: ipynb,py:percent
 #     text_representation:
 #       extension: .py
 #       format_name: percent
@@ -13,6 +14,11 @@
 #     language: python
 #     name: python3
 # ---
+
+# %% [markdown]
+# ## Use quantile regression to estimate cost deciles
+#
+# Explore using quantile regression models to estimate cost of installation of ASHP at each cost decile for each of the 8 property archetypes.
 
 # %%
 import pandas
@@ -56,7 +62,7 @@ data = pandas.read_csv(
 
 # %%
 # cpi data
-cpi_05_3_df = produce_costs_dataset.get_data.get_df_from_url(
+cpi_05_3_df = produce_costs_dataset.get_data.get_df_from_csv_url(
     config["data_source"]["cpi_source_url"]
 )
 cpi_quarterly_df = (

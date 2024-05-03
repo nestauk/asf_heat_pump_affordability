@@ -3,10 +3,11 @@
 #   jupytext:
 #     cell_metadata_filter: -all
 #     comment_magics: true
+#     formats: ipynb,py:light
 #     text_representation:
 #       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
+#       format_name: light
+#       format_version: '1.5'
 #       jupytext_version: 1.16.1
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
@@ -14,7 +15,11 @@
 #     name: python3
 # ---
 
-# %%
+# ## Modelling heat demand
+#
+# This notebook estimates median average annual heat demand (kWh) for each of 8 property archetypes, at the median number of rooms for that property type.
+
+# +
 import pandas
 import numpy
 from matplotlib import pyplot
@@ -23,7 +28,8 @@ import statsmodels.formula.api as sm
 from asf_heat_pump_affordability import config
 from asf_heat_pump_affordability.pipeline import produce_costs_dataset, preprocess_data
 
-# %%
+# -
+
 quantiles = produce_costs_dataset.main(
     "231009",
     2023,
@@ -32,19 +38,17 @@ quantiles = produce_costs_dataset.main(
     save_to_s3=True,
 )
 
-# %%
 quantiles
 
-# %%
 # mcs-epc data
 data = pandas.read_csv(
     "s3://asf-heat-pump-affordability/mcs_installations_epc_most_relevant_231009_preprocessed_yearRange_20212023.csv",
     index_col=0,
 )
 
-# %%
+# +
 # cpi data
-cpi_05_3_df = produce_costs_dataset.get_data.get_df_from_url(
+cpi_05_3_df = produce_costs_dataset.get_data.get_df_from_csv_url(
     config["data_source"]["cpi_source_url"]
 )
 cpi_quarterly_df = (
@@ -59,20 +63,18 @@ cpi_quarterly_df = (
 data = produce_costs_dataset.preprocess_data.generate_df_adjusted_costs(
     mcs_epc_df=data, cpi_quarters_df=cpi_quarterly_df
 )
+# -
 
-# %%
 for (
     archetype,
     filter,
 ) in produce_costs_dataset.archetypes.classify_dict_archetypes_masks(data).items():
     data.loc[filter, "archetype"] = archetype
 
-# %% [markdown]
 # ### What is a representative heat demand for each of the archetypes
 #
 # We can use the heat demand estimates provided to MCS by heat pump installers.
 
-# %%
 # hard-coded reference to archetypes
 archetypes = [
     "pre_1950_flat",
@@ -85,7 +87,6 @@ archetypes = [
     "post_1950_bungalow",
 ]
 
-# %%
 (
     data.groupby("archetype", as_index=False)["heat_demand"]
     .describe()
@@ -96,23 +97,19 @@ archetypes = [
     .reset_index(drop=True)
 )
 
-# %% [markdown]
 # The median heat demands seem to line up reasonably well with other data I've seen with the exception of detached houses which seem quite high.
 #
 # As these heat demands could be influenced by the size of the properties within each categories, let's see how our results compare after some basic adjustment.
 
-# %%
 # Remove data where habitable room count is na (7268), 0 (1316), or > 12 (191). Final n=53,054
 data = data.loc[lambda df: df["NUMBER_HABITABLE_ROOMS"].between(1, 12), :]
 
-# %%
 # This is a decent model that explains ~24% of the fit for heat_demand.
 # Total floor area is a better predictor, but this allows us to map to the archtype for cost more easily.
 model = sm.quantreg("heat_demand ~ archetype + NUMBER_HABITABLE_ROOMS", data=data).fit(
     0.5
 )
 
-# %%
 pred = (
     model.get_prediction(
         pandas.DataFrame(
@@ -137,7 +134,7 @@ pred = (
     )
 )
 
-# %%
+# +
 f, ax = pyplot.subplots(figsize=(8, 6))
 
 for archetype in archetypes:
@@ -150,14 +147,13 @@ for archetype in archetypes:
 ax.legend()
 ax.set_xlabel("Number of Habitable Rooms")
 ax.set_ylabel("Estimated Annual Household Heat Demand (kWh)")
+# -
 
-# %%
 # This model is a slightly better fit, not clear if it's worth it.
 model = sm.quantreg("heat_demand ~ archetype * NUMBER_HABITABLE_ROOMS", data=data).fit(
     0.5
 )
 
-# %%
 pred = (
     model.get_prediction(
         pandas.DataFrame(
@@ -182,7 +178,7 @@ pred = (
     )
 )
 
-# %%
+# +
 f, ax = pyplot.subplots(figsize=(8, 6))
 
 for archetype in quantiles.index:
@@ -196,7 +192,7 @@ ax.legend()
 ax.set_xlabel("Number of Habitable Rooms")
 ax.set_ylabel("Estimated Annual Household Heat Demand (kWh)")
 
-# %%
+# +
 collapse_archetypes = {
     "pre_1950_flat": "flat",
     "post_1950_flat": "flat",
@@ -213,21 +209,19 @@ collapse_archetypes = {
     .groupby("simple_archetype", as_index=False)["NUMBER_HABITABLE_ROOMS"]
     .describe()
 )
+# -
 
-# %% [markdown]
 # The medians look like reasonable sizes for each archetype, so we'll adjust the model by total habitabe room numbers of:
 # Flat: 2 rooms (e.g. 1 bed flat)
 # Semi_terraced_house: 5 rooms (e.g. 3 bedrooms, 1 reception, 1 dining)
 # Detached_house: 7 rooms (e.g. 4 bedrooms, 1 dining, 2 reception)
 # Bungalow: 4 rooms (e.g. 2 bedrooms, 1 reception, 1 dining)
 
-# %%
 # This is a decent model that explains ~24% of the fit for heat_demand.
 model = sm.quantreg("heat_demand ~ archetype + NUMBER_HABITABLE_ROOMS", data=data).fit(
     0.5
 )
 
-# %%
 pred = (
     model.get_prediction(
         pandas.DataFrame(
@@ -241,8 +235,14 @@ pred = (
     .assign(archetype=archetypes, NUMBER_HABITABLE_ROOMS=[2, 2, 5, 5, 7, 7, 4, 4])
 )
 
-# %%
 # This looks reasonable.
-pred[["archetype", "NUMBER_HABITABLE_ROOMS", "mean"]].assign(
-    mean=lambda df: df["mean"].round(-2)
-).rename(columns={"mean": "heat demand"})
+df = (
+    pred[["archetype", "NUMBER_HABITABLE_ROOMS", "mean"]]
+    .assign(mean=lambda df: df["mean"].round(-2))
+    .rename(columns={"mean": "heat demand"})
+)
+df
+
+df.to_excel(
+    "s3://asf-heat-pump-affordability/2021_2023_house_archetypes_avg_heat_demand.xlsx"
+)
