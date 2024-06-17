@@ -18,7 +18,6 @@
 import polars as pl
 import polars.selectors as cs
 from datetime import datetime
-import statsmodels.formula.api as sm
 import s3fs
 
 # %%
