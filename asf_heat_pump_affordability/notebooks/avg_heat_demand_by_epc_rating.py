@@ -43,7 +43,7 @@ data = pl.read_csv(
 #
 # We require current energy rating and heat demand data. We start by dropping rows missing this data.
 #
-# We are also only interested in domestic installations.
+# We are also only interested in domestic installations and those with an EPC inspection within the last decade.
 
 # %%
 print(len(data))
