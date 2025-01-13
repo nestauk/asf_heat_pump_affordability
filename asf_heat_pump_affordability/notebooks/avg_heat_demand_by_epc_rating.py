@@ -68,7 +68,7 @@ min_date = datetime.strptime("2013-01-01", "%Y-%m-%d")
 df = df.filter(
     pl.col("CURRENT_ENERGY_RATING").is_not_null(),
     pl.col("heat_demand").is_not_null(),
-    ~pl.col("installation_type").is_in(["Non-Domestic"]),
+    ~pl.col("installation_type").is_in(["Non-Domestic", "Commercial"]),
     pl.col("INSPECTION_DATE") >= min_date,
 )
 
@@ -93,6 +93,9 @@ hd_estimates = (
 
 # %%
 hd_estimates = hd_estimates.with_columns(cs.numeric().round_sig_figs(4))
+
+# %%
+hd_estimates
 
 # %%
 hd_estimates
