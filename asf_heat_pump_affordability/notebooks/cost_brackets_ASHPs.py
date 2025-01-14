@@ -126,23 +126,24 @@ mcs_df["country"].value_counts(dropna=False)
 
 # %%
 # UK-wide results
-uk_results = mcs_df["adjusted_cost_band"].value_counts().reset_index()
-uk_results["UK_percentage_of_installations"] = (
-    uk_results["count"] / uk_results["count"].sum() * 100
+results = mcs_df["adjusted_cost_band"].value_counts().reset_index()
+results["UK_percentage_of_installations"] = (
+    results["count"] / results["count"].sum() * 100
 ).round(2)
-uk_results = uk_results.rename(columns={"count": "UK_ASHP_installation_count"})
+results = results.rename(columns={"count": "UK_ASHP_installation_count"})
 
 # %%
-# Filter to Wales only
-wales_results = mcs_df[mcs_df["country"] == "Wales"]
-wales_results = wales_results["adjusted_cost_band"].value_counts().reset_index()
-wales_results["Wales_percentage_of_installations"] = (
-    wales_results["count"] / wales_results["count"].sum() * 100
-).round(2)
-wales_results = wales_results.rename(columns={"count": "Wales_ASHP_installation_count"})
+# Filter to each nation
+for country in ["England", "Scotland", "Wales"]:
+    df = mcs_df[mcs_df["country"] == country]
+    df = df["adjusted_cost_band"].value_counts().reset_index()
+    df[f"{country}_percentage_of_installations"] = (
+        df["count"] / df["count"].sum() * 100
+    ).round(2)
+    df = df.rename(columns={"count": f"{country}_ASHP_installation_count"})
+    results = results.merge(df, how="left", on="adjusted_cost_band")
 
 # %%
-results = wales_results.merge(uk_results, how="left", on="adjusted_cost_band")
 results["adjusted_cost_band"] = pd.Categorical(
     results["adjusted_cost_band"], categories=choices
 )
@@ -153,3 +154,5 @@ results
 results.to_csv(
     "s3://asf-heat-pump-affordability/May2022_March2024_ASHP_domestic_installation_costs_2024GBP.csv"
 )
+
+# %%
