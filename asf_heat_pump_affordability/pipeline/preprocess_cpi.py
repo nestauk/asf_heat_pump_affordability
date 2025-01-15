@@ -1,4 +1,5 @@
 import pandas as pd
+import logging
 
 from asf_heat_pump_affordability import config
 
@@ -18,6 +19,7 @@ def get_df_quarterly_cpi_with_adjustment_factors(
         pd.DataFrame: quarterly CPI values with adjustment factors for a given reference year
     """
     cpi_ref_value = _get_int_ref_cpi_value(ref_year, cpi_df)
+    logging.info(f"CPI reference value for year {ref_year}: {cpi_ref_value}")
     cpi_quarterly_df = _get_df_quarterly_cpi_data(cpi_df)
     cpi_quarterly_df["adjustment_factor"] = _compute_series_cpi_adjustment_factors(
         ref_cpi=cpi_ref_value, cpi_series=cpi_quarterly_df[cpi_col_header]
