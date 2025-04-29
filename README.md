@@ -2,10 +2,13 @@
 
 ## Description
 
-This repo contains the functions and run script to generate a dataframe of the costs of installing Air Source Heat Pumps
-(ASHP) in 8 different types of home at a series of percentiles given by the user. The 8 housing archetypes are: flats;
-semi-detached & terraced houses and maisonettes; detached houses; and bungalows; with each group split into pre- and
-post-1950 construction. Costs are adjusted for inflation against a chosen base year.
+This repo contains the functions and notebook to generate a dataframe of the costs of installing Air Source Heat Pumps
+(ASHP) in 8 different types of home, at the median number of rooms, at a series of percentiles given by the user. The 8
+housing archetypes are: flats; semi-detached & terraced houses and maisonettes; detached houses; and bungalows; with
+each group split into pre- and post-1950 construction. Costs are adjusted for inflation against a chosen base year.
+
+The repo also contains a notebook to estimate the median average annual heat demand (kWh) for each of the 8 archetypes
+at the median number of rooms.
 
 ## Setup
 
@@ -20,14 +23,18 @@ post-1950 construction. Costs are adjusted for inflation against a chosen base y
 
 ## Recreate cost policy analysis dataset
 
-To recreate the data used in the Q1 2024 cost policy analysis, run the following lines in your terminal:
+To recreate the installations cost and heat demand datasets used in the Q1 2024 cost policy analysis, run the following
+lines in your terminal:
 
 ```
 pip install jupytext
 jupytext --to notebook asf_heat_pump_affordability/notebooks/investigate_effect_of_room_number.py
+jupytext --to notebook asf_heat_pump_affordability/notebooks/Archetype_Heat_Demand.py
 ```
 
-Run all lines of the resulting `investigate_effect_of_room_number.ipynb` notebook. The analytical output dataset will be saved into the `asf-heat-pump-affordability` bucket on S3.
+Run all lines of the resulting `investigate_effect_of_room_number.ipynb` and `Archetype_Heat_Demand.ipynb` notebooks to
+save the installation costs, and average annual heat demand datasets, respectively, into the
+`asf-heat-pump-affordability` bucket on S3.
 
 ## Data sources - Q1 2024 cost policy analysis
 
@@ -53,8 +60,10 @@ asf_heat_pump_affordability
 ├───getters
 │    get_data.py - functions to retrieve data from external sources
 ├───notebooks
+│    Archetype_Heat_Demand.py - notebook to estimate median average annual heat demand for each property archetype
 │    identify_and_review_analytical_sample.py - notebook to explore impact of applying exclusion criteria on core MCS-EPC dataset
 │    investigate_effect_of_room_number.py - notebook using quantile regression models to estimate installation costs by archetype and room number
+│    quantile_regression.py - notebook to explore using different quantile regression models to estimate installation cost
 ├───pipeline
 │    archetypes.py - functions to classify housing archetypes
 │    generate_cost_percentiles.py - functions to generate cost percentiles by archetype
